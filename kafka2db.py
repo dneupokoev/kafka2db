@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # kafka2db
 # https://github.com/dneupokoev/kafka2db
-dv_file_version = '230215.01'
+dv_file_version = '230215.02'
 #
 # Kafka to DB PostgreSQL
 # Переливка данных из топика кафки в базу данных PostgreSQL
@@ -348,7 +348,7 @@ if __name__ == '__main__':
                 if dv_kafka_type == 'ai':
                     dv_result_type, dv_result_text = f_json2db_ai(dv_kafka_json)
                 logger.debug(f"{dv_result_type = }")
-                logger.debug(f"{dv_result_text = }")
+                logger.info(f"{dv_kafka_type} - {dv_result_type} - {dv_result_text}")
             #
             # max_number_msg - какое максимальное количество сообщений обработать за один запуск скрипта (нужно для тестирования, в бою скорее всего ограничивать не надо)
             if settings.max_number_msg != 0 and dv_number_msg >= settings.max_number_msg:

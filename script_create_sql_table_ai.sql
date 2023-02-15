@@ -5,7 +5,7 @@ CREATE TABLE public.ai_linkedid (
 );
 CREATE INDEX ai_linkedid_created_at_idx ON public.ai_linkedid (created_at);
 CREATE INDEX ai_linkedid_operatorid_idx ON public.ai_linkedid (operatorid);
-COMMENT ON TABLE public.ai_linkedid IS 'справочник связей: звонок - оператор';
+COMMENT ON TABLE public.ai_linkedid IS 'таблица: звонок - оператор';
 COMMENT ON COLUMN public.ai_linkedid.linkedid IS 'ссылка на звонок в астериске';
 COMMENT ON COLUMN public.ai_linkedid.created_at IS 'дата и время создания текущей записи в БД (не время звонка, а именно когда данная запись создана)';
 COMMENT ON COLUMN public.ai_linkedid.operatorid IS 'ссылка на оператора КЦ';
@@ -19,7 +19,7 @@ CREATE TABLE public.ai_texts (
 );
 CREATE INDEX ai_texts_linkedid_idx ON public.ai_texts (linkedid);
 CREATE INDEX ai_texts_label_idx ON public.ai_texts (label);
-COMMENT ON TABLE public.ai_texts IS 'справочник связей: звонок - текст - метка - коэффициент вероятности наличия данной метки в данном тексте';
+COMMENT ON TABLE public.ai_texts IS 'таблица: звонок - текст - метка - коэффициент вероятности наличия данной метки в данном тексте';
 COMMENT ON COLUMN public.ai_texts.linkedid IS 'ссылка на звонок в астериске';
 COMMENT ON COLUMN public.ai_texts.str IS 'текст, для которого определяется метка и коэффициент';
 COMMENT ON COLUMN public.ai_texts.label IS 'название метки';
@@ -34,7 +34,7 @@ CREATE TABLE public.ai_existence (
 CREATE INDEX ai_existence_linkedid_idx ON public.ai_existence (linkedid);
 CREATE INDEX ai_existence_existence_name_idx ON public.ai_existence (existence_name);
 CREATE INDEX ai_existence_is_existence_idx ON public.ai_existence (is_existence);
-COMMENT ON TABLE public.ai_existence IS 'справочник связей: звонок - наличие метки в звонке';
+COMMENT ON TABLE public.ai_existence IS 'таблица: звонок - наличие метки в звонке';
 COMMENT ON COLUMN public.ai_existence.linkedid IS 'ссылка на звонок в астериске';
 COMMENT ON COLUMN public.ai_existence.existence_name IS 'название метки';
 COMMENT ON COLUMN public.ai_existence.is_existence IS '1 - метка существует в звонке, 0 - метка не существует в звонке';
