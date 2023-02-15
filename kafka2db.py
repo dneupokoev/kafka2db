@@ -351,7 +351,7 @@ if __name__ == '__main__':
                 logger.debug(f"{dv_result_text = }")
             #
             # max_number_msg - какое максимальное количество сообщений обработать за один запуск скрипта (нужно для тестирования, в бою скорее всего ограничивать не надо)
-            if dv_number_msg >= settings.max_number_msg:
+            if settings.max_number_msg != 0 and dv_number_msg >= settings.max_number_msg:
                 break
             # если скрипт работает дольше отведенного времени, то прерываем работу
             if round(int('{:.0f}'.format(1000 * (time.time() - dv_time_begin))) / (1000 * 60)) >= settings.max_minutes_work:
