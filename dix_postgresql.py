@@ -1,3 +1,4 @@
+# 230309 добавил database
 # 230215
 
 import psycopg2
@@ -5,14 +6,15 @@ from psycopg2 import Error
 from psycopg2.extras import execute_batch
 
 
-def get_db_info(user='', password='', host='', port=5432):
+def get_db_info(user='', password='', host='', port=5432, database=''):
     '''
     Функция возвращает информацию о базе данных
     '''
     dv_out_text = ''
     try:
         # Подключение к существующей базе данных
-        connection = psycopg2.connect(user=user,
+        connection = psycopg2.connect(database=database,
+                                      user=user,
                                       password=password,
                                       host=host,
                                       port=port)
@@ -37,7 +39,7 @@ def get_db_info(user='', password='', host='', port=5432):
     return dv_out_text
 
 
-def postgresql_del_and_insert(user='', password='', host='', port=5432,
+def postgresql_del_and_insert(user='', password='', host='', port=5432, database='',
                               dv_table='', dv_id_name='', dv_id_value='', dv_df=''):
     '''
     Функция удаляет по ключу dv_id_name=dv_id_value данные из таблицы dv_table и делает insert датафрейма dv_df
@@ -62,7 +64,8 @@ def postgresql_del_and_insert(user='', password='', host='', port=5432,
             # print(dv_df.values)
             #
             # Подключение к существующей базе данных
-            connection = psycopg2.connect(user=user,
+            connection = psycopg2.connect(database=database,
+                                          user=user,
                                           password=password,
                                           host=host,
                                           port=port)

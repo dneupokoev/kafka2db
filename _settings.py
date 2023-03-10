@@ -11,9 +11,15 @@
 # подключение к PostgreSQL
 PostgreSQL_host = '192.168.5.'
 PostgreSQL_port = 5432
-PostgreSQL_dbname = 'dbname '
+PostgreSQL_database = 'dbname'
 PostgreSQL_user = 'user'
 PostgreSQL_password = 'password'
+# подключение к PostgreSQL
+PostgreSQL_dwh_host = '192.168.5.'
+PostgreSQL_dwh_port = 5432
+PostgreSQL_dwh_database = 'dbname'
+PostgreSQL_dwh_user = 'user'
+PostgreSQL_dwh_password = 'password'
 #
 # подключение к kafka
 KAFKA_bootstrap_servers = '...com:9092,...com:9092,...com:9092'
@@ -25,7 +31,7 @@ KAFKA_topic = ['topic_01', ]
 #
 #
 # *** Настройки ***
-# для избыточного логирования True, иначе False
+# для избыточного логирования True, иначе False (в прод = False)
 DEBUG = True
 #
 # создаем папку для логов:
@@ -63,7 +69,7 @@ CHECK_DISK_SPACE = True
 # True - отправлять результат в телеграм, False - не отправлять
 SEND_TELEGRAM = False
 # SEND_SUCCESS_REPEATED_NOT_EARLIER_THAN_MINUTES - минимальное количество минут между отправками УСПЕХА (чтобы не заспамить)
-SEND_SUCCESS_REPEATED_NOT_EARLIER_THAN_MINUTES = 360
+SEND_SUCCESS_REPEATED_NOT_EARLIER_THAN_MINUTES = 345
 # создать бота - получить токен - создать группу - бота сделать администратором - получить id группы
 TLG_BOT_TOKEN = 'your_bot_token'
 # TLG_CHAT_FOR_SEND = идентификатор группы
@@ -74,3 +80,4 @@ TLG_BOT_TOKEN = 'your_bot_token'
 # curl https://api.telegram.org/bot<your_bot_token>/getUpdates
 # 4. Взять значение "id" из объекта "chat". Это и есть идентификатор чата. Для групповых чатов он отрицательный, для личных переписок положительный.
 TLG_CHAT_FOR_SEND = -000
+

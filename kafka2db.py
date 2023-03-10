@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # kafka2db
 # https://github.com/dneupokoev/kafka2db
-dv_file_version = '230215.02'
+dv_file_version = '230310.01'
+# 230310.01 - забирает, обрабатывает данные из топика и сохраняет в таблицу in_interaction_header
+# 230215.02 - первая рабочая версия: забирает, обрабатывает данные из топика и сохраняет в таблицы ai_*
 #
 # Kafka to DB PostgreSQL
 # Переливка данных из топика кафки в базу данных PostgreSQL
@@ -69,7 +71,8 @@ logger.info(f'{dv_file_version = }')
 dv_info_postgresql = dix_postgresql.get_db_info(user=settings.PostgreSQL_user,
                                                 password=settings.PostgreSQL_password,
                                                 host=settings.PostgreSQL_host,
-                                                port=settings.PostgreSQL_port)
+                                                port=settings.PostgreSQL_port,
+                                                database=settings.PostgreSQL_database)
 logger.info(f"db_info = {dv_info_postgresql}")
 #
 logger.info(f'{settings.KAFKA_bootstrap_servers = }')
@@ -85,8 +88,22 @@ logger.info(f'{settings.SEND_TELEGRAM = }')
 #
 dv_find_text = re.compile(r'(\r|\n|\t|\b)')
 
-
 #
+#
+def change_phone_format_to_rus(in_txt=''):
+    '''
+    Функция конвертирует полученный текст в формат номер телефона
+    :param in_txt: текст
+    :return: телефон в формате 70001234567
+    '''
+    # оставляем только цифры в номере телефона
+    in_txt = re.sub(r'\D', '', in_txt)
+    # если телефон состоит только из 10 цифр, то впереди добавляем 7
+    in_txt = re.sub(r'^\d{10}$', f'7{in_txt}', in_txt)
+    # если номер состоит из 11 цифр и первая из них 8, то меняем первую цифру на 7
+    in_txt = re.sub(r'(^8)(\d{10}$)', r'7\2', in_txt)
+    return in_txt
+
 #
 #
 def get_now():
@@ -99,7 +116,8 @@ def get_now():
     # dv_created = f"{datetime.datetime.fromtimestamp(dv_time_begin).strftime('%Y-%m-%d %H:%M:%S.%f')}"
     return dv_created
 
-
+#
+#
 def get_second_between_now_and_datetime(in_datetime_str='2000-01-01 00:00:00'):
     '''
     Функция вернет количество секунд между текущим временем и полученной датой-временем в формате '%Y-%m-%d %H:%M:%S'
@@ -136,15 +154,99 @@ def f_check_json_from_kafka(dv_in_json):
         if f_is_json_key_present(dv_out_json, 'is_test'):
             dv_out_type = 'is_test'
         elif f_is_json_key_present(dv_out_json, 'linkedid') \
-                and f_is_json_key_present(dv_out_json, 'operatorid') \
-                and f_is_json_key_present(dv_out_json, 'texts') \
-                and f_is_json_key_present(dv_out_json, 'existence'):
+             and f_is_json_key_present(dv_out_json, 'operatorid') \
+             and f_is_json_key_present(dv_out_json, 'texts') \
+             and f_is_json_key_present(dv_out_json, 'existence'):
             dv_out_type = 'ai'
+        elif f_is_json_key_present(dv_out_json, 'tbl4c2a'):
+            dv_out_type = 'tbl4c2a'
         else:
             dv_out_type = 'unknown'
     except:
         dv_out_json = json.loads('{}')
     return dv_out_type, dv_out_json
+
+
+def f_json2db_tbl4c2a(dv_in_json):
+    '''
+    Функция обрабатывает json для отправителя "tbl4c2a":
+    - формирует нужные SQL-запросы
+    - выполняет на БД эти запросы
+    '''
+    dv_result_text = ''
+    dv_result_type = ''
+    try:
+        dv_uid = dv_in_json['uid']
+        dv_tbl4c2a = dv_in_json['tbl4c2a']
+        #
+        if dv_tbl4c2a == 'interaction':
+            # формируем таблицу df_in_interaction_header
+            df_in_interaction_header = pd.json_normalize(dv_in_json['header'])
+            # если "нужной" колонки нет, то создадим её
+            if 'uid' not in df_in_interaction_header.columns:
+                df_in_interaction_header['uid'] = f"{dv_uid}"
+            if 'number' not in df_in_interaction_header.columns:
+                df_in_interaction_header['number'] = ''
+            if 'date_doc' not in df_in_interaction_header.columns:
+                df_in_interaction_header['date_doc'] = ''
+            if 'type' not in df_in_interaction_header.columns:
+                df_in_interaction_header['type'] = ''
+            if 'patient_uid' not in df_in_interaction_header.columns:
+                df_in_interaction_header['patient_uid'] = ''
+            if 'patient_phone' not in df_in_interaction_header.columns:
+                df_in_interaction_header['patient_phone'] = ''
+            if 'patient_first_uid' not in df_in_interaction_header.columns:
+                df_in_interaction_header['patient_first_uid'] = ''
+            if 'patient_first_phone' not in df_in_interaction_header.columns:
+                df_in_interaction_header['patient_first_phone'] = ''
+            if 'not_recording_reason_uid' not in df_in_interaction_header.columns:
+                df_in_interaction_header['not_recording_reason_uid'] = ''
+            if 'autor_uid' not in df_in_interaction_header.columns:
+                df_in_interaction_header['autor_uid'] = ''
+            if 'phone_operator' not in df_in_interaction_header.columns:
+                df_in_interaction_header['phone_operator'] = ''
+            if 'phone_callcenter' not in df_in_interaction_header.columns:
+                df_in_interaction_header['phone_callcenter'] = ''
+            if 'is_manual_call' not in df_in_interaction_header.columns:
+                df_in_interaction_header['is_manual_call'] = ''
+            if 'linkedid' not in df_in_interaction_header.columns:
+                df_in_interaction_header['linkedid'] = ''
+            #
+            # проверяем формат номеров телефонов и преобразуем к формату РФ
+            df_in_interaction_header['patient_phone'] = change_phone_format_to_rus(in_txt=f"{df_in_interaction_header['patient_phone']}")
+            df_in_interaction_header['patient_first_phone'] = change_phone_format_to_rus(in_txt=f"{df_in_interaction_header['patient_first_phone']}")
+            #
+            # оставляем только "нужные" колонки
+            df_in_interaction_header = df_in_interaction_header[
+                ['uid', 'number', 'date_doc', 'type',
+                 'patient_uid', 'patient_phone', 'patient_first_uid', 'patient_first_phone',
+                 'not_recording_reason_uid',
+                 'autor_uid', 'phone_operator', 'phone_callcenter', 'is_manual_call', 'linkedid']]
+            # меняем в колонках значение NaN на дефолтные значения
+            df_in_interaction_header.fillna('', inplace=True)
+            #
+            # Сохраняем данные в таблицу db_c2a.in_interaction_header
+            dv_f_result_type, dv_f_result_text = dix_postgresql.postgresql_del_and_insert(user=settings.PostgreSQL_dwh_user,
+                                                                                          password=settings.PostgreSQL_dwh_password,
+                                                                                          host=settings.PostgreSQL_dwh_host,
+                                                                                          port=settings.PostgreSQL_dwh_port,
+                                                                                          database=settings.PostgreSQL_dwh_database,
+                                                                                          dv_table='db_c2a.in_interaction_header',
+                                                                                          dv_id_name='row_id',
+                                                                                          dv_id_value=0,
+                                                                                          dv_df=df_in_interaction_header)
+            if dv_f_result_type != 'SUCCESS':
+                raise Exception(f"{dv_f_result_text}")
+        # elif...
+        #
+        #
+        dv_result_text = f'f_json2db_tbl4c2a - SUCCESS: {dv_tbl4c2a} - {dv_uid = }'
+        dv_result_type = 'SUCCESS'
+    except Exception as error:
+        dv_result_text = f'f_json2db_tbl4c2a - ERROR: {error = }'
+        dv_result_type = 'ERROR'
+    return dv_result_type, dv_result_text
+
 
 
 def f_json2db_ai(dv_in_json):
@@ -200,6 +302,7 @@ def f_json2db_ai(dv_in_json):
                                                                                       password=settings.PostgreSQL_password,
                                                                                       host=settings.PostgreSQL_host,
                                                                                       port=settings.PostgreSQL_port,
+                                                                                      database=settings.PostgreSQL_database,
                                                                                       dv_table='public.ai_linkedid',
                                                                                       dv_id_name='linkedid',
                                                                                       dv_id_value=dv_linkedid,
@@ -212,6 +315,7 @@ def f_json2db_ai(dv_in_json):
                                                                                       password=settings.PostgreSQL_password,
                                                                                       host=settings.PostgreSQL_host,
                                                                                       port=settings.PostgreSQL_port,
+                                                                                      database=settings.PostgreSQL_database,
                                                                                       dv_table='public.ai_texts',
                                                                                       dv_id_name='linkedid',
                                                                                       dv_id_value=dv_linkedid,
@@ -224,6 +328,7 @@ def f_json2db_ai(dv_in_json):
                                                                                       password=settings.PostgreSQL_password,
                                                                                       host=settings.PostgreSQL_host,
                                                                                       port=settings.PostgreSQL_port,
+                                                                                      database=settings.PostgreSQL_database,
                                                                                       dv_table='public.ai_existence',
                                                                                       dv_id_name='linkedid',
                                                                                       dv_id_value=dv_linkedid,
@@ -347,6 +452,8 @@ if __name__ == '__main__':
                 dv_result_type = ''
                 if dv_kafka_type == 'ai':
                     dv_result_type, dv_result_text = f_json2db_ai(dv_kafka_json)
+                elif dv_kafka_type == 'tbl4c2a':
+                    dv_result_type, dv_result_text = f_json2db_tbl4c2a(dv_kafka_json)
                 logger.debug(f"{dv_result_type = }")
                 logger.info(f"{dv_kafka_type} - {dv_result_type} - {dv_result_text}")
             #
