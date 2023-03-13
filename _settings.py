@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # kafka2db
 # https://github.com/dneupokoev/kafka2db
-# 230215
+# 230310
 #
 # Kafka to DB PostgreSQL
 # Переливка данных из топика кафки в базу данных PostgreSQL

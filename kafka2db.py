@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # kafka2db
 # https://github.com/dneupokoev/kafka2db
-dv_file_version = '230310.01'
+dv_file_version = '230313.01'
+# 230313.01 - исправил проблему, когда перед номером телефона в in_interaction_header добавлялся 0
 # 230310.01 - забирает, обрабатывает данные из топика и сохраняет в таблицу in_interaction_header
 # 230215.02 - первая рабочая версия: забирает, обрабатывает данные из топика и сохраняет в таблицы ai_*
 #
@@ -213,8 +214,8 @@ def f_json2db_tbl4c2a(dv_in_json):
                 df_in_interaction_header['linkedid'] = ''
             #
             # проверяем формат номеров телефонов и преобразуем к формату РФ
-            df_in_interaction_header['patient_phone'] = change_phone_format_to_rus(in_txt=f"{df_in_interaction_header['patient_phone']}")
-            df_in_interaction_header['patient_first_phone'] = change_phone_format_to_rus(in_txt=f"{df_in_interaction_header['patient_first_phone']}")
+            df_in_interaction_header['patient_phone'][0] = change_phone_format_to_rus(in_txt=df_in_interaction_header['patient_phone'][0])
+            df_in_interaction_header['patient_first_phone'][0] = change_phone_format_to_rus(in_txt=df_in_interaction_header['patient_first_phone'][0])
             #
             # оставляем только "нужные" колонки
             df_in_interaction_header = df_in_interaction_header[
@@ -240,7 +241,7 @@ def f_json2db_tbl4c2a(dv_in_json):
         # elif...
         #
         #
-        dv_result_text = f'f_json2db_tbl4c2a - SUCCESS: {dv_tbl4c2a} - {dv_uid = }'
+        dv_result_text = f'f_json2db_tbl4c2a - SUCCESS: {dv_tbl4c2a} - {dv_uid = } - {dv_f_result_text}'
         dv_result_type = 'SUCCESS'
     except Exception as error:
         dv_result_text = f'f_json2db_tbl4c2a - ERROR: {error = }'
@@ -337,7 +338,7 @@ def f_json2db_ai(dv_in_json):
             raise Exception(f"{dv_f_result_text}")
         #
         # dv_result_text = f'f_json2db_ai - SUCCESS: {dv_linkedid = }\n{df_ai_linkedid = }\n{df_ai_texts = }\n{df_ai_existence = }'
-        dv_result_text = f'f_json2db_ai - SUCCESS: {dv_linkedid = }'
+        dv_result_text = f'f_json2db_ai - SUCCESS: {dv_linkedid = } - {dv_f_result_text}'
         dv_result_type = 'SUCCESS'
     except Exception as error:
         dv_result_text = f'f_json2db_ai - ERROR: {error = }'
