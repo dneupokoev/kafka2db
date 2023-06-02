@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # kafka2db
 # https://github.com/dneupokoev/kafka2db
-dv_file_version = '230313.01'
+dv_file_version = '230602.01'
+# 230602.01 - в дате df_in_interaction_header['date_doc'] заменил "Т" на ПРОБЕЛ (между датой и временем)
 # 230313.01 - исправил проблему, когда перед номером телефона в in_interaction_header добавлялся 0
 # 230310.01 - забирает, обрабатывает данные из топика и сохраняет в таблицу in_interaction_header
 # 230215.02 - первая рабочая версия: забирает, обрабатывает данные из топика и сохраняет в таблицы ai_*
@@ -190,6 +191,11 @@ def f_json2db_tbl4c2a(dv_in_json):
                 df_in_interaction_header['number'] = ''
             if 'date_doc' not in df_in_interaction_header.columns:
                 df_in_interaction_header['date_doc'] = ''
+            else:
+                try:
+                    df_in_interaction_header['date_doc'] = df_in_interaction_header['date_doc'].replace('T', ' ')
+                except:
+                    pass
             if 'type' not in df_in_interaction_header.columns:
                 df_in_interaction_header['type'] = ''
             if 'patient_uid' not in df_in_interaction_header.columns:
