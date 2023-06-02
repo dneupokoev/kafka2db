@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # kafka2db
 # https://github.com/dneupokoev/kafka2db
-dv_file_version = '230602.02'
-# 230602.02 - в дате df_in_interaction_header['date_doc'] заменил "Т" на ПРОБЕЛ (между датой и временем)
+dv_file_version = '230602.03'
+# 230602.03 - добавил возможность отаправлять данные по api rest
 # 230313.01 - исправил проблему, когда перед номером телефона в in_interaction_header добавлялся 0
 # 230310.01 - забирает, обрабатывает данные из топика и сохраняет в таблицу in_interaction_header
 # 230215.02 - первая рабочая версия: забирает, обрабатывает данные из топика и сохраняет в таблицы ai_*
@@ -13,6 +13,7 @@ dv_file_version = '230602.02'
 import settings
 import os
 import re
+import requests
 import sys
 import json
 import datetime
@@ -182,8 +183,25 @@ def f_json2db_tbl4c2a(dv_in_json):
         dv_tbl4c2a = dv_in_json['tbl4c2a']
         #
         if dv_tbl4c2a == 'interaction':
+            dv_etl_json = dv_in_json['header'][0]
+            try:
+                dv_etl_json['date_doc'] = dv_etl_json['date_doc'].replace('T', ' ')
+            except:
+                dv_etl_json['date_doc'] = ''
+                pass
+            #
+            # Вызываем api (передаем данные в c2a)
+            dv_json4api = dv_etl_json
+            dv_json4api['pwd'] = settings.CONST_api_c2a_pwd
+            # logger.info(f"{dv_json4api = }")
+            requests.request(method='POST',
+                             url=settings.CONST_api_c2a_url_interaction,
+                             headers={'Content-Type': 'application/json'},
+                             data=json.dumps(dv_json4api))
+            #
+            # Готовим данные и сохраняем в БД
             # формируем таблицу df_in_interaction_header
-            df_in_interaction_header = pd.json_normalize(dv_in_json['header'])
+            df_in_interaction_header = pd.json_normalize(dv_etl_json)
             # если "нужной" колонки нет, то создадим её
             if 'uid' not in df_in_interaction_header.columns:
                 df_in_interaction_header['uid'] = f"{dv_uid}"
@@ -191,11 +209,11 @@ def f_json2db_tbl4c2a(dv_in_json):
                 df_in_interaction_header['number'] = ''
             if 'date_doc' not in df_in_interaction_header.columns:
                 df_in_interaction_header['date_doc'] = ''
-            else:
-                try:
-                    df_in_interaction_header['date_doc'][0] = df_in_interaction_header['date_doc'][0].replace('T', ' ')
-                except:
-                    pass
+            # else:
+            #     try:
+            #         df_in_interaction_header['date_doc'][0] = df_in_interaction_header['date_doc'][0].replace('T', ' ')
+            #     except:
+            #         pass
             if 'type' not in df_in_interaction_header.columns:
                 df_in_interaction_header['type'] = ''
             if 'patient_uid' not in df_in_interaction_header.columns:
@@ -231,6 +249,7 @@ def f_json2db_tbl4c2a(dv_in_json):
                  'autor_uid', 'phone_operator', 'phone_callcenter', 'is_manual_call', 'linkedid']]
             # меняем в колонках значение NaN на дефолтные значения
             df_in_interaction_header.fillna('', inplace=True)
+            #
             #
             # Сохраняем данные в таблицу db_c2a.in_interaction_header
             dv_f_result_type, dv_f_result_text = dix_postgresql.postgresql_del_and_insert(user=settings.PostgreSQL_dwh_user,

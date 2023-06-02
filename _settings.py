@@ -30,6 +30,16 @@ KAFKA_topic = ['topic_01', ]
 #
 #
 #
+# Отправка данных в api call2asterisk
+# CONST_api_c2a_send_enabled = 1 - включено, 0 - выключено (создаются коллбэки или не создаются)
+CONST_api_c2a_send_enabled = 1
+CONST_api_c2a_pwd = "token"
+CONST_api_c2a_url_interaction = "url"
+#
+#
+#
+#
+#
 # *** Настройки ***
 # для избыточного логирования True, иначе False (в прод = False)
 DEBUG = True
