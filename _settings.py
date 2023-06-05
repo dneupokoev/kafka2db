@@ -21,20 +21,21 @@ PostgreSQL_dwh_database = 'dbname'
 PostgreSQL_dwh_user = 'user'
 PostgreSQL_dwh_password = 'password'
 #
-# подключение к kafka
-KAFKA_bootstrap_servers = '...com:9092,...com:9092,...com:9092'
-KAFKA_group_id = 'kafka2db'
-# KAFKA_topic - список топиков, которые нужно слушать и обрабатывать: ['topic_01', 'topic_02', ] - можно только один, если топика не окажется в кафке, то будет ошибка
-KAFKA_topic = ['topic_01', ]
-# KAFKA_topic = ['topic_01', 'topic_02', ]
-#
-#
 #
 # Отправка данных в api call2asterisk
 # CONST_api_c2a_send_enabled = 1 - включено, 0 - выключено (создаются коллбэки или не создаются)
 CONST_api_c2a_send_enabled = 1
 CONST_api_c2a_pwd = "token"
 CONST_api_c2a_url_interaction = "url"
+#
+#
+#
+# подключение к kafka
+KAFKA_bootstrap_servers = '...com:9092,...com:9092,...com:9092'
+KAFKA_group_id = 'kafka2db'
+# KAFKA_topic - список топиков, которые нужно слушать и обрабатывать: ['topic_01', 'topic_02', ] - можно только один, если топика не окажется в кафке, то будет ошибка
+KAFKA_topic = ['topic_01', ]
+# KAFKA_topic = ['topic_01', 'topic_02', ]
 #
 #
 #
@@ -60,7 +61,7 @@ PATH_TO_LOG = '/var/log/kafka2db/'
 #
 # max_minutes_work - максимальное количество минут работы скрипта до остановки (0 - без остановки, int - может понадобиться, чтобы гибче управлять автозапуском)
 # ВНИМАНИЕ! реально может работать на несколько минут дольше указанного
-# max_minutes_work = 50
+# max_minutes_work = 55
 max_minutes_work = 1
 #
 # max_number_msg - какое максимальное количество сообщений обработать за один запуск скрипта (нужно для тестирования, в бою скорее всего ограничивать не надо)
