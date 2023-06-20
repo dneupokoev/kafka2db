@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # kafka2db
 # https://github.com/dneupokoev/kafka2db
-dv_file_version = '230602.03'
-# 230602.03 - добавил возможность отаправлять данные по api rest
+dv_file_version = '230620.01'
+# 230620.01 - добавил возможность отправлять данные по api rest
 # 230313.01 - исправил проблему, когда перед номером телефона в in_interaction_header добавлялся 0
 # 230310.01 - забирает, обрабатывает данные из топика и сохраняет в таблицу in_interaction_header
 # 230215.02 - первая рабочая версия: забирает, обрабатывает данные из топика и сохраняет в таблицы ai_*
@@ -184,6 +184,8 @@ def f_json2db_tbl4c2a(dv_in_json):
         #
         if dv_tbl4c2a == 'interaction':
             dv_etl_json = dv_in_json['header'][0]
+            if 'uid' not in dv_etl_json:
+                dv_etl_json['uid'] = f"{dv_uid}"
             try:
                 dv_etl_json['date_doc'] = dv_etl_json['date_doc'].replace('T', ' ')
             except:
