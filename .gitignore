@@ -1,0 +1,5 @@
+/settings.py
+/jupyter/
+/.venv/
+/example_kafka_send.txt
+/script_create_sql_table_dbc2a.sql
