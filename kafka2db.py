@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # kafka2db
 # https://github.com/dneupokoev/kafka2db
-dv_file_version = '230620.01'
+dv_file_version = '240112.01'
+# 240112.01 - добавил обработку топика, который только api вызывает
 # 230620.01 - добавил возможность отправлять данные по api rest
 # 230313.01 - исправил проблему, когда перед номером телефона в in_interaction_header добавлялся 0
 # 230310.01 - забирает, обрабатывает данные из топика и сохраняет в таблицу in_interaction_header
@@ -153,9 +154,12 @@ def f_check_json_from_kafka(dv_in_json):
     dv_out_json = json.loads('{}')
     try:
         dv_out_json = json.loads(dv_in_json)
-        #
+        # Определим тип по наличию ключей
         if f_is_json_key_present(dv_out_json, 'is_test'):
             dv_out_type = 'is_test'
+        elif f_is_json_key_present(dv_out_json, 'date_recognized') \
+             and f_is_json_key_present(dv_out_json, 'linkedid'):
+            dv_out_type = 'avtootvetchik-detection'
         elif f_is_json_key_present(dv_out_json, 'linkedid') \
              and f_is_json_key_present(dv_out_json, 'operatorid') \
              and f_is_json_key_present(dv_out_json, 'texts') \
@@ -168,6 +172,41 @@ def f_check_json_from_kafka(dv_in_json):
     except:
         dv_out_json = json.loads('{}')
     return dv_out_type, dv_out_json
+
+
+def f_json2db_avtootvetchik_detection(dv_in_json):
+    '''
+    Функция обрабатывает json и отправляет данные в api
+    '''
+    dv_result_text = ''
+    dv_result_type = ''
+    try:
+        dv_etl_json = {}
+        dv_etl_json['linkedid'] = dv_in_json['linkedid']
+        try:
+            dv_etl_json['date_recognized'] = dv_in_json['date_recognized'].replace('T', ' ')
+        except:
+            dv_etl_json['date_recognized'] = ''
+            pass
+        #
+        # Вызываем api (передаем данные в c2a)
+        dv_json4api = dv_etl_json
+        dv_json4api['pwd'] = settings.CONST_api_c2a_pwd
+        logger.info(f"{dv_json4api = }")
+        response = requests.request(method='POST',
+                                    url=settings.CONST_api_c2a_url_avtootvetchik,
+                                    headers={'Content-Type': 'application/json'},
+                                    data=json.dumps(dv_json4api))
+        if response.status_code == 200:
+            dv_result_text = f"f_json2db_avtootvetchik_detection - SUCCESS: {dv_etl_json['linkedid'] = }"
+            dv_result_type = 'SUCCESS'
+        else:
+            dv_result_text = f"f_json2db_avtootvetchik_detection - ERROR: api {response.status_code = }"
+            dv_result_type = 'ERROR'
+    except Exception as error:
+        dv_result_text = f'f_json2db_avtootvetchik_detection - ERROR: {error = }'
+        dv_result_type = 'ERROR'
+    return dv_result_type, dv_result_text
 
 
 def f_json2db_tbl4c2a(dv_in_json):
@@ -482,6 +521,9 @@ if __name__ == '__main__':
                     dv_result_type, dv_result_text = f_json2db_ai(dv_kafka_json)
                 elif dv_kafka_type == 'tbl4c2a':
                     dv_result_type, dv_result_text = f_json2db_tbl4c2a(dv_kafka_json)
+                elif dv_kafka_type == 'avtootvetchik-detection':
+                    # Пришла информации о срабатывании автоответчика
+                    dv_result_type, dv_result_text = f_json2db_avtootvetchik_detection(dv_kafka_json)
                 logger.debug(f"{dv_result_type = }")
                 logger.info(f"{dv_kafka_type} - {dv_result_type} - {dv_result_text}")
             #
