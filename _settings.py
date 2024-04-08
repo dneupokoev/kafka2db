@@ -33,7 +33,7 @@ CONST_api_c2a_url_interaction = "url"
 # подключение к kafka
 KAFKA_bootstrap_servers = '...com:9092,...com:9092,...com:9092'
 KAFKA_group_id = 'kafka2db'
-# KAFKA_topic - список топиков, которые нужно слушать и обрабатывать: ['topic_01', 'topic_02', ] - можно только один, если топика не окажется в кафке, то будет ошибка
+# KAFKA_topic - список топиков, которые нужно слушать и обрабатывать: ['topic_01', 'topic_02', ] - можно любое количество, если топика не окажется в кафке, то будет ошибка
 KAFKA_topic = ['topic_01', ]
 # KAFKA_topic = ['topic_01', 'topic_02', ]
 #
