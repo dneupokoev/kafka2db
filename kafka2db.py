@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # kafka2db
 # https://github.com/dneupokoev/kafka2db
-dv_file_version = '240112.01'
+dv_file_version = '240812.01'
+# 240812.01 - изменил обращение к df, теперь изменение колонки через .loc
 # 240112.01 - добавил обработку топика, который только api вызывает
 # 230620.01 - добавил возможность отправлять данные по api rest
 # 230313.01 - исправил проблему, когда перед номером телефона в in_interaction_header добавлялся 0
@@ -279,8 +280,12 @@ def f_json2db_tbl4c2a(dv_in_json):
                 df_in_interaction_header['linkedid'] = ''
             #
             # проверяем формат номеров телефонов и преобразуем к формату РФ
-            df_in_interaction_header['patient_phone'][0] = change_phone_format_to_rus(in_txt=df_in_interaction_header['patient_phone'][0])
-            df_in_interaction_header['patient_first_phone'][0] = change_phone_format_to_rus(in_txt=df_in_interaction_header['patient_first_phone'][0])
+            # # Так было до 240812:
+            # df_in_interaction_header['patient_phone'][0] = change_phone_format_to_rus(in_txt=df_in_interaction_header['patient_phone'][0])
+            # df_in_interaction_header['patient_first_phone'][0] = change_phone_format_to_rus(in_txt=df_in_interaction_header['patient_first_phone'][0])
+            # Так стало с 240812:
+            df_in_interaction_header.loc[0, 'patient_phone'] = change_phone_format_to_rus(in_txt=df_in_interaction_header['patient_phone'][0])
+            df_in_interaction_header.loc[0, 'patient_first_phone'] = change_phone_format_to_rus(in_txt=df_in_interaction_header['patient_first_phone'][0])
             #
             # оставляем только "нужные" колонки
             df_in_interaction_header = df_in_interaction_header[
@@ -480,16 +485,21 @@ if __name__ == '__main__':
         #
         #
         #
-        # Подключаемся к топику кафки и получаем значения
+        # Подключаемся к топику кафки и получаем значения:
+        logger.debug(f"Подключаемся к кафке")
         kafka_consumer = Consumer({
             'bootstrap.servers': settings.KAFKA_bootstrap_servers,
             'group.id': settings.KAFKA_group_id,
+            'session.timeout.ms': 6000,
             'auto.offset.reset': 'earliest'
         })
+        # conf = {'bootstrap.servers': broker, 'group.id': group, 'session.timeout.ms': 6000, 'auto.offset.reset': 'earliest', 'enable.auto.offset.store': False}
+        logger.debug(f"Указываем топики, которые будем слушать")
         kafka_consumer.subscribe(settings.KAFKA_topic)
         #
         # порядковый номер сообщения с начала работы данного скрипта
         dv_number_msg = 0
+        logger.debug(f"Начинаем слушать кафку")
         while True:
             # пока True будем слушать кафку
             dv_kafka_msg = kafka_consumer.poll(timeout=1.0)

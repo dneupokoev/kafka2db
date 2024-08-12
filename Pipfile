@@ -4,16 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-jupyter = "*"
-ipykernel = "*"
 pytelegrambotapi = "*"
-autopep8 = "*"
 loguru = "*"
 confluent-kafka = "*"
 pandas = "*"
 psycopg2-binary = "*"
+jupyter = "*"
+ipykernel = "*"
+autopep8 = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.11"
+python_version = "3.12"
