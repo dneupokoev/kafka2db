@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # kafka2db
 # https://github.com/dneupokoev/kafka2db
-dv_file_version = '240812.01'
+dv_file_version = '250303.01'
+# 250303.01 - добавил колонки 'uid_c2a_actual', 'dict_dwh' в таблицу df_in_interaction_header
 # 240812.01 - изменил обращение к df, теперь изменение колонки через .loc
 # 240112.01 - добавил обработку топика, который только api вызывает
 # 230620.01 - добавил возможность отправлять данные по api rest
@@ -73,11 +74,11 @@ logger.info(f'{dv_path_main = }')
 logger.info(f'{dv_file_name = }')
 logger.info(f'{dv_file_version = }')
 # получаем информацию о базе данных
-dv_info_postgresql = dix_postgresql.get_db_info(user=settings.PostgreSQL_user,
-                                                password=settings.PostgreSQL_password,
-                                                host=settings.PostgreSQL_host,
-                                                port=settings.PostgreSQL_port,
-                                                database=settings.PostgreSQL_database)
+dv_info_postgresql = dix_postgresql.get_db_info(user=settings.PostgreSQL_dwh_user,
+                                                password=settings.PostgreSQL_dwh_password,
+                                                host=settings.PostgreSQL_dwh_host,
+                                                port=settings.PostgreSQL_dwh_port,
+                                                database=settings.PostgreSQL_dwh_database)
 logger.info(f"db_info = {dv_info_postgresql}")
 #
 logger.info(f'{settings.KAFKA_bootstrap_servers = }')
@@ -236,10 +237,8 @@ def f_json2db_tbl4c2a(dv_in_json):
             dv_json4api = dv_etl_json
             dv_json4api['pwd'] = settings.CONST_api_c2a_pwd
             # logger.info(f"{dv_json4api = }")
-            requests.request(method='POST',
-                             url=settings.CONST_api_c2a_url_interaction,
-                             headers={'Content-Type': 'application/json'},
-                             data=json.dumps(dv_json4api))
+            requests.request(
+                method='POST', url=settings.CONST_api_c2a_url_interaction, headers={'Content-Type': 'application/json'}, data=json.dumps(dv_json4api))
             #
             # Готовим данные и сохраняем в БД
             # формируем таблицу df_in_interaction_header
@@ -278,35 +277,34 @@ def f_json2db_tbl4c2a(dv_in_json):
                 df_in_interaction_header['is_manual_call'] = ''
             if 'linkedid' not in df_in_interaction_header.columns:
                 df_in_interaction_header['linkedid'] = ''
+            if 'uid_c2a_actual' not in df_in_interaction_header.columns:
+                df_in_interaction_header['uid_c2a_actual'] = ''
+            if 'dict_dwh' not in df_in_interaction_header.columns:
+                df_in_interaction_header['dict_dwh'] = ''
             #
             # проверяем формат номеров телефонов и преобразуем к формату РФ
-            # # Так было до 240812:
-            # df_in_interaction_header['patient_phone'][0] = change_phone_format_to_rus(in_txt=df_in_interaction_header['patient_phone'][0])
-            # df_in_interaction_header['patient_first_phone'][0] = change_phone_format_to_rus(in_txt=df_in_interaction_header['patient_first_phone'][0])
-            # Так стало с 240812:
             df_in_interaction_header.loc[0, 'patient_phone'] = change_phone_format_to_rus(in_txt=df_in_interaction_header['patient_phone'][0])
             df_in_interaction_header.loc[0, 'patient_first_phone'] = change_phone_format_to_rus(in_txt=df_in_interaction_header['patient_first_phone'][0])
             #
             # оставляем только "нужные" колонки
-            df_in_interaction_header = df_in_interaction_header[
-                ['uid', 'number', 'date_doc', 'type',
-                 'patient_uid', 'patient_phone', 'patient_first_uid', 'patient_first_phone',
-                 'not_recording_reason_uid',
-                 'autor_uid', 'phone_operator', 'phone_callcenter', 'is_manual_call', 'linkedid']]
+            df_in_interaction_header = df_in_interaction_header[[
+                'uid', 'number', 'date_doc', 'type', 'patient_uid', 'patient_phone', 'patient_first_uid', 'patient_first_phone', 'not_recording_reason_uid',
+                'autor_uid', 'phone_operator', 'phone_callcenter', 'is_manual_call', 'linkedid', 'uid_c2a_actual', 'dict_dwh']]
             # меняем в колонках значение NaN на дефолтные значения
             df_in_interaction_header.fillna('', inplace=True)
             #
             #
             # Сохраняем данные в таблицу db_c2a.in_interaction_header
-            dv_f_result_type, dv_f_result_text = dix_postgresql.postgresql_del_and_insert(user=settings.PostgreSQL_dwh_user,
-                                                                                          password=settings.PostgreSQL_dwh_password,
-                                                                                          host=settings.PostgreSQL_dwh_host,
-                                                                                          port=settings.PostgreSQL_dwh_port,
-                                                                                          database=settings.PostgreSQL_dwh_database,
-                                                                                          dv_table='db_c2a.in_interaction_header',
-                                                                                          dv_id_name='row_id',
-                                                                                          dv_id_value=0,
-                                                                                          dv_df=df_in_interaction_header)
+            dv_f_result_type, dv_f_result_text = dix_postgresql.postgresql_del_and_insert(
+                user=settings.PostgreSQL_dwh_user,
+                password=settings.PostgreSQL_dwh_password,
+                host=settings.PostgreSQL_dwh_host,
+                port=settings.PostgreSQL_dwh_port,
+                database=settings.PostgreSQL_dwh_database,
+                dv_table='db_c2a.in_interaction_header',
+                dv_id_name='row_id',
+                dv_id_value=0,
+                dv_df=df_in_interaction_header)
             if dv_f_result_type != 'SUCCESS':
                 raise Exception(f"{dv_f_result_text}")
         # elif...
