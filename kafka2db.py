@@ -320,6 +320,8 @@ def f_json2db_tbl4c2a(dv_in_json):
                 dv_df=df_in_interaction_header)
             if dv_f_result_type != 'SUCCESS':
                 raise Exception(f"{dv_result_text}")
+            else:
+                dv_result_text = dv_f_result_type
         # elif...
         #
         #
