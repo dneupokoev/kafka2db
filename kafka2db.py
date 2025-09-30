@@ -233,7 +233,7 @@ def f_json2db_tbl4c2a(dv_in_json):
             dv_send_dict['param'] = {}
             dv_send_dict['param']['tbl4c2a'] = json.dumps(dv_in_json)
             requests.request(
-                method='POST', url=settings.CONST_api_c2a_url_interaction, headers={'Content-Type': 'application/json'}, data=json.dumps(dv_send_dict))
+                method='POST', url=settings.CONST_api_c2a_kafka_tbl4c2a, headers={'Content-Type': 'application/json'}, data=json.dumps(dv_send_dict))
             pass
         #
         if dv_tbl4c2a == 'interaction':
