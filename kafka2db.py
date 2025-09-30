@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # kafka2db
 # https://github.com/dneupokoev/kafka2db
-dv_file_version = '250303.01'
+dv_file_version = '250930.01'
+# 250930.01 - все json, в которых есть поле tbl4c2a отправляю а эндпоинт /itzamna/kafka_tbl4c2a/ и дальнейший разбор идет там
 # 250303.01 - добавил колонки 'uid_c2a_actual', 'dict_dwh' в таблицу df_in_interaction_header
 # 240812.01 - изменил обращение к df, теперь изменение колонки через .loc
 # 240112.01 - добавил обработку топика, который только api вызывает
@@ -223,6 +224,18 @@ def f_json2db_tbl4c2a(dv_in_json):
         dv_uid = dv_in_json['uid']
         dv_tbl4c2a = dv_in_json['tbl4c2a']
         #
+        if settings.CONST_api_c2a_kafka_tbl4c2a != '':
+            # Все отправляем в settings.CONST_api_c2a_kafka_tbl4c2a
+            #
+            # Вызываем api (передаем данные в c2a)
+            dv_send_dict = {}
+            dv_send_dict['atok'] = settings.CONST_api_c2a_pwd
+            dv_send_dict['param'] = {}
+            dv_send_dict['param']['tbl4c2a'] = json.dumps(dv_in_json)
+            requests.request(
+                method='POST', url=settings.CONST_api_c2a_url_interaction, headers={'Content-Type': 'application/json'}, data=json.dumps(dv_send_dict))
+            pass
+        #
         if dv_tbl4c2a == 'interaction':
             dv_etl_json = dv_in_json['header'][0]
             if 'uid' not in dv_etl_json:
@@ -295,7 +308,7 @@ def f_json2db_tbl4c2a(dv_in_json):
             #
             #
             # Сохраняем данные в таблицу db_c2a.in_interaction_header
-            dv_f_result_type, dv_f_result_text = dix_postgresql.postgresql_del_and_insert(
+            dv_f_result_type, dv_result_text = dix_postgresql.postgresql_del_and_insert(
                 user=settings.PostgreSQL_dwh_user,
                 password=settings.PostgreSQL_dwh_password,
                 host=settings.PostgreSQL_dwh_host,
@@ -306,11 +319,11 @@ def f_json2db_tbl4c2a(dv_in_json):
                 dv_id_value=0,
                 dv_df=df_in_interaction_header)
             if dv_f_result_type != 'SUCCESS':
-                raise Exception(f"{dv_f_result_text}")
+                raise Exception(f"{dv_result_text}")
         # elif...
         #
         #
-        dv_result_text = f'f_json2db_tbl4c2a - SUCCESS: {dv_tbl4c2a} - {dv_uid = } - {dv_f_result_text}'
+        dv_result_text = f'f_json2db_tbl4c2a - SUCCESS: {dv_tbl4c2a} - {dv_uid = } - {dv_result_text}'
         dv_result_type = 'SUCCESS'
     except Exception as error:
         dv_result_text = f'f_json2db_tbl4c2a - ERROR: {error = }'
@@ -533,7 +546,10 @@ if __name__ == '__main__':
                     # Пришла информации о срабатывании автоответчика
                     dv_result_type, dv_result_text = f_json2db_avtootvetchik_detection(dv_kafka_json)
                 logger.debug(f"{dv_result_type = }")
-                logger.info(f"{dv_kafka_type} - {dv_result_type} - {dv_result_text}")
+                if dv_kafka_type == 'ERROR':
+                    logger.error(f"{dv_kafka_type} - {dv_result_type} - {dv_result_text}")
+                else:
+                    logger.info(f"{dv_kafka_type} - {dv_result_type} - {dv_result_text}")
             #
             # max_number_msg - какое максимальное количество сообщений обработать за один запуск скрипта (нужно для тестирования, в бою скорее всего ограничивать не надо)
             if settings.max_number_msg != 0 and dv_number_msg >= settings.max_number_msg:

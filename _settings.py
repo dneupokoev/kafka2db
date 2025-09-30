@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # kafka2db
 # https://github.com/dneupokoev/kafka2db
-# 230310
+# 230930
 #
 # Kafka to DB PostgreSQL
 # Переливка данных из топика кафки в базу данных PostgreSQL
@@ -26,7 +26,8 @@ PostgreSQL_dwh_password = 'password'
 # CONST_api_c2a_send_enabled = 1 - включено, 0 - выключено (создаются коллбэки или не создаются)
 CONST_api_c2a_send_enabled = 1
 CONST_api_c2a_pwd = "token"
-CONST_api_c2a_url_interaction = "url"
+CONST_api_c2a_url_interaction = "http://url"
+CONST_api_c2a_kafka_tbl4c2a = "https://url"
 #
 #
 #
